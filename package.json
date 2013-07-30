@@ -1,0 +1,14 @@
+{
+  "name": "dnsmux",
+  "version": "0.0.1",
+  "contributors": [{
+      "name": "inoue.tomoya",
+      "email": "inoue.tomoya@gmail.com"
+  }],
+  "description": "tcp dns proxy",
+  "dependencies": {
+    "native-dns-packet": "*",
+    "opts": "*"
+  },
+  "keywords": ["dns", "proxy", "multiplex"]
+}

@@ -4,7 +4,7 @@ dnsmux
  * The dnsmux.js is DNS Proxy which use 1 tcp session multiplexing dns querys.
 
 ```
-# git clone http://hoge/dnmux.js
+# git clone https://github.com/bave/dnsmux.git
 # cd dnsmux
 # npm install
 # node ./dnsmux.js 

@@ -5,6 +5,8 @@ var DEBUG;
 var dgram = require('dgram');
 var net   = require("net");
 
+var dnspack = require('native-dns-packet')
+
 var id_mapper = {};
 
 (function main() {
@@ -77,7 +79,7 @@ var id_mapper = {};
         process.exit(0);
     };
 
-    var DEBUG = opts.get('debug');
+    DEBUG = opts.get('debug');
 
     var odd_data = Buffer(0);
 
@@ -209,9 +211,30 @@ var id_mapper = {};
 function udp_handler(forward, msg, rinfo) {
 
     if (DEBUG) {
+        /* reference of name message parse
+        { header: { id: 0,
+                    qr: 0,
+                    opcode: 0,
+                    aa: 0,
+                    tc: 0,
+                    rd: 0,
+                    ra: 0,
+                    res1: 0,
+                    res2: 0,
+                    res3: 0,
+                    rcode: 0 },
+          question: [ { name: 'hoge.hage.jp', type: 1, class: 1 } ],
+          answer: [],
+          authority: [],
+          additional: [],
+          edns_options: [],
+          payload: undefined 
+        }
+        */
         console.log("receive " + msg.length + "bytes" + 
-                    ", from " + rinfo.address + ":" + rinfo.port + 
-                    ", DNS-ID " + msg.readUInt16BE(0));
+                    ", from "  + rinfo.address + ":" + rinfo.port + 
+                    ", ID "    + msg.readUInt16BE(0) +
+                    ", Que "   + dnspack.parse(msg).question[0].name);
     }
 
     var payload_length = new Buffer(2);
@@ -249,10 +272,38 @@ function tcp_handler(forward4, forward6, odd_data, byte_stream) {
             return byte_stream;
         }
 
+
         var peer_info = id_mapper[msg.readUInt16BE(0)];
         var peer_addr = peer_info['from_addr'];
         var peer_port = peer_info['from_port'];
-        var peer_id   = peer_info['from_id'];
+        var peer_id   = peer_info['dns_id'];
+
+        if (DEBUG) {
+            /* reference of name message parse
+            { header: { id: 0,
+                        qr: 0,
+                        opcode: 0,
+                        aa: 0,
+                        tc: 0,
+                        rd: 0,
+                        ra: 0,
+                        res1: 0,
+                        res2: 0,
+                        res3: 0,
+                        rcode: 0 },
+              question: [ { name: 'hoge.hage.jp', type: 1, class: 1 } ],
+              answer: [],
+              authority: [],
+              additional: [],
+              edns_options: [],
+              payload: undefined 
+            }
+            */
+            console.log("receive " + msg.length + "bytes" + 
+                        ", to   "  + peer_addr + ":" + peer_port + 
+                        ", ID "    + peer_id +
+                        ", Ans "   + dnspack.parse(msg).answer[0].name);
+        }
 
         if (net.isIPv4(peer_addr)) {
             forward4.send(msg, 0, msg_size, peer_port, peer_addr);

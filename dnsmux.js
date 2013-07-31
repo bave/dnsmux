@@ -52,6 +52,14 @@ var id_mapper = {};
             'callback'   : undefined
         },
         {
+            'short'      : '1',
+            'long'       : 'one',
+            'description': 'one query use one tcp sesstion',
+            'value'      : false,
+            'required'   : false,
+            'callback'   : undefined
+        },
+        {
             'short'      : 'd',
             'long'       : 'debug',
             'description': 'show debug messages',
@@ -70,7 +78,7 @@ var id_mapper = {};
     ]);
 
     function opt_version() {
-        console.log('version 0.0.1');
+        console.log('version 0.0.2');
         process.exit(0);
     };
 
@@ -84,7 +92,7 @@ var id_mapper = {};
     var odd_data = Buffer(0);
 
     var TCP_OPT = {};
-    TCP_OPT.host = opts.get('server')
+    TCP_OPT.host = opts.get('server');
     if (TCP_OPT.host == undefined) {
         TCP_OPT.host= '8.8.8.8';
     }
@@ -97,6 +105,12 @@ var id_mapper = {};
     var UDP_PORT = opts.get('local');
     if (UDP_PORT == undefined) {
          UDP_PORT = 53;
+    }
+
+    var ONE = opts.get('one');
+    if (ONE == undefined) {
+        ONE = false; 
+
     }
 
     var tcp_status = 'END';
@@ -141,6 +155,9 @@ var id_mapper = {};
     });
 
     tcp_client.on('data', function(data){
+        if (ONE) {
+            tcp_client.end();
+        }
         var byte_stream = new Buffer(data);
         odd_data = tcp_handler(udp4_server, udp6_server, odd_data, byte_stream);
     });

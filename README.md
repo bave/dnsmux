@@ -16,6 +16,8 @@ show help command
     -h, --help
 show debug messages
     -d, --debug
+one query use one tcp sesstion
+    -1, --one
 proxy service port (default: 53)
     -l, --local <value>
 dns server port (default: 53)

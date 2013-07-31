@@ -1,14 +1,15 @@
 {
   "name": "dnsmux",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "contributors": [{
       "name": "inoue.tomoya",
       "email": "inoue.tomoya@gmail.com"
   }],
-  "description": "tcp dns proxy",
+  "description": "The dnsmux.js is DNS Proxy which use 1 tcp session multiplexing dns querys.",
   "dependencies": {
     "native-dns-packet": "*",
     "opts": "*"
   },
+  "engines" : { "node" : ">=0.8.0" }
   "keywords": ["dns", "proxy", "multiplex"]
 }

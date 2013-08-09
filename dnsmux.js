@@ -3,7 +3,8 @@
 var DEBUG;
 
 var dgram = require('dgram');
-var net   = require("net");
+var net   = require('net');
+var util =  require('util');
 
 var dnspack = require('native-dns-packet')
 
@@ -113,7 +114,6 @@ var id_mapper = {};
 
     }
 
-    var tcp_status = 'END';
     var tcp_client = new net.Socket({type: 'tcp4'});
     tcp_client.connect(TCP_OPT.port, TCP_OPT.host);
     tcp_client.setNoDelay(true);
@@ -125,33 +125,39 @@ var id_mapper = {};
      
     tcp_client.on('error', function(e) {
         if (e['code'] == 'Unknown system errno 37') {
-            ;
+            tcp_client.destroy();
+        } else if (e['code'] == 'EPIPE') {
+            tcp_client.destroy();
+        } else if (e['code'] == 'ECONNRESET') {
+            tcp_client.destroy();
         } else {
-            console.error(e['errno']);
+            console.log(typeof(e));
+            console.error(e);
             process.exit();
         }
     });
 
     tcp_client.on('connect', function(){
-        tcp_status = 'EST';
-        while (udp_wait_buffer.length != 0) {
-            var wait_msg = udp_wait_buffer.shift();
-            udp_handler(tcp_client, wait_msg[0], wait_msg[1]);
-        }
         if (DEBUG) {
             console.log('connection EST - ' + TCP_OPT.host + ':' + TCP_OPT.port);
+        }
+        while (udp_wait_buffer.length != 0) {
+            if (tcp_client.writable == true) {
+                var wait_msg = udp_wait_buffer.shift();
+                udp_handler(tcp_client, wait_msg[0], wait_msg[1]);
+            } else {
+                break;
+            }
         }
     });
 
     tcp_client.on('end', function(had_error){
-        tcp_status = 'END';
-        if (DEBUG) {
-            console.log('connection END - ' + TCP_OPT.host + ':' + TCP_OPT.port);
-        }
     });
 
     tcp_client.on('close', function(){
-        tcp_status = 'END';
+        if (DEBUG) {
+            console.log('connection END - ' + TCP_OPT.host + ':' + TCP_OPT.port);
+        }
     });
 
     tcp_client.on('data', function(data){
@@ -174,16 +180,20 @@ var id_mapper = {};
     });
 
     udp4_server.on("message", function (msg, rinfo) {
-        if (tcp_status == 'EST') {
+        //dump(tcp_client);
+        /*
+        console.log("w.finished: " + tcp_client._writableState.finished);
+        console.log("w.end:      " + tcp_client._writableState.end);
+        console.log("w.ending:   " + tcp_client._writableState.ending);
+        */
+        if (tcp_client.writable == true) {
             udp_handler(tcp_client, msg, rinfo);
         } else {
             udp_wait_buffer.push([msg, rinfo]);
-            if (tcp_status == 'END') {
-                tcp_status = 'CONN';
+            if (tcp_client._connecting == false) {
                 tcp_client.connect(TCP_OPT.port, TCP_OPT.host);
             }
         }
-        //console.log(tcp_status);
     });
 
     udp4_server.on('error', function(e) {
@@ -203,16 +213,14 @@ var id_mapper = {};
     });
 
     udp6_server.on("message", function (msg, rinfo) {
-        if (tcp_status == 'EST') {
-            udp_handler(tcp_client, msg, rinfo);
-        } else {
+        if (tcp_client.writable == true) {
             udp_wait_buffer.push([msg, rinfo]);
-            if (tcp_status == 'END') {
-                tcp_status = 'CONN';
+            if (tcp_client._connecting == false) {
                 tcp_client.connect(TCP_OPT.port, TCP_OPT.host);
             }
+        } else {
+            udp_handler(tcp_client, msg, rinfo);
         }
-        //console.log(tcp_status);
     });
 
     udp6_server.on('error', function(e) {
@@ -247,11 +255,11 @@ function udp_handler(forward, msg, rinfo) {
           edns_options: [],
           payload: undefined 
         }
-        */
         console.log("receive " + msg.length + "bytes" + 
                     ", from "  + rinfo.address + ":" + rinfo.port + 
                     ", ID "    + msg.readUInt16BE(0) +
-                    ", Que "   + dnspack.parse(msg).question[0].name);
+                    ", Que "   + dnspack.parse(msg).question);
+        */
     }
 
     var payload_length = new Buffer(2);
@@ -315,11 +323,11 @@ function tcp_handler(forward4, forward6, odd_data, byte_stream) {
               edns_options: [],
               payload: undefined 
             }
-            */
             console.log("receive " + msg.length + "bytes" + 
                         ", to   "  + peer_addr + ":" + peer_port + 
                         ", ID "    + peer_id +
-                        ", Ans "   + dnspack.parse(msg).answer[0].name);
+                        ", Ans "   + dnspack.parse(msg).answer);
+            */
         }
 
         if (net.isIPv4(peer_addr)) {
@@ -330,4 +338,8 @@ function tcp_handler(forward4, forward6, odd_data, byte_stream) {
             ;
         }
     }
+}
+
+function dump(v){
+    return console.log(util.inspect(v));
 }

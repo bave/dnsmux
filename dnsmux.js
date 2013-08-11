@@ -126,13 +126,15 @@ var id_mapper = {};
     tcp_client.on('error', function(e) {
         if (e['code'] == 'Unknown system errno 37') {
             tcp_client.destroy();
+        } else if (e['code'] == 'Unknown system errno 56') {
+            tcp_client.destroy();
         } else if (e['code'] == 'EPIPE') {
             tcp_client.destroy();
         } else if (e['code'] == 'ECONNRESET') {
             tcp_client.destroy();
         } else {
-            console.log(typeof(e));
             console.error(e);
+            dump(this);
             process.exit();
         }
     });
@@ -214,12 +216,12 @@ var id_mapper = {};
 
     udp6_server.on("message", function (msg, rinfo) {
         if (tcp_client.writable == true) {
+            udp_handler(tcp_client, msg, rinfo);
+        } else {
             udp_wait_buffer.push([msg, rinfo]);
             if (tcp_client._connecting == false) {
                 tcp_client.connect(TCP_OPT.port, TCP_OPT.host);
             }
-        } else {
-            udp_handler(tcp_client, msg, rinfo);
         }
     });
 

@@ -260,8 +260,13 @@ function udp_handler(forward, msg, rinfo) {
         console.log("receive " + msg.length + "bytes" + 
                     ", from "  + rinfo.address + ":" + rinfo.port + 
                     ", ID "    + msg.readUInt16BE(0));
-        var dumping = dump(dnspack.parse(msg).question);
-        console.log("var Queery = " + dumping.split(" ").join("").split("\n").join("") + ";");
+        try {
+            var dumping = dump(dnspack.parse(msg).question);
+            console.log("var Queery = " + dumping.split(" ").join("").split("\n").join("") + ";");
+        } catch (e) {
+            console.error(e);
+            console.log(require('hexy').hexy(msg));
+        }
     }
 
     var payload_length = new Buffer(2);
@@ -329,8 +334,13 @@ function tcp_handler(forward4, forward6, odd_data, byte_stream) {
             console.log("receive " + msg.length + "bytes" + 
                         ", to   "  + peer_addr + ":" + peer_port + 
                         ", ID "    + peer_id);
-            var dumping = dump(dnspack.parse(msg).answer);
-            console.log("var Answer = " + dumping.split(" ").join("").split("\n").join("") + ";");
+            try {
+                var dumping = dump(dnspack.parse(msg).answer);
+                console.log("var Answer = " + dumping.split(" ").join("").split("\n").join("") + ";");
+            } catch (e) {
+                console.error(e);
+                console.log(require('hexy').hexy(msg));
+            }
         }
 
         if (net.isIPv4(peer_addr)) {

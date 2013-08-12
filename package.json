@@ -8,8 +8,9 @@
   "description": "The dnsmux.js is DNS Proxy which use 1 tcp session multiplexing dns querys.",
   "dependencies": {
     "native-dns-packet": "*",
+    "hexy": "*",
     "opts": "*"
   },
-  "engines" : { "node" : ">=0.8.0" }
+  "engines" : { "node" : ">=0.8.0" },
   "keywords": ["dns", "proxy", "multiplex"]
 }

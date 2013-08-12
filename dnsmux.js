@@ -134,7 +134,7 @@ var id_mapper = {};
             tcp_client.destroy();
         } else {
             console.error(e);
-            dump(this);
+            console.log(dump(this));
             process.exit();
         }
     });
@@ -182,7 +182,6 @@ var id_mapper = {};
     });
 
     udp4_server.on("message", function (msg, rinfo) {
-        //dump(tcp_client);
         /*
         console.log("w.finished: " + tcp_client._writableState.finished);
         console.log("w.end:      " + tcp_client._writableState.end);
@@ -257,11 +256,12 @@ function udp_handler(forward, msg, rinfo) {
           edns_options: [],
           payload: undefined 
         }
+        */
         console.log("receive " + msg.length + "bytes" + 
                     ", from "  + rinfo.address + ":" + rinfo.port + 
-                    ", ID "    + msg.readUInt16BE(0) +
-                    ", Que "   + dnspack.parse(msg).question);
-        */
+                    ", ID "    + msg.readUInt16BE(0));
+        var dumping = dump(dnspack.parse(msg).question);
+        console.log("var Queery = " + dumping.split(" ").join("").split("\n").join("") + ";");
     }
 
     var payload_length = new Buffer(2);
@@ -325,11 +325,12 @@ function tcp_handler(forward4, forward6, odd_data, byte_stream) {
               edns_options: [],
               payload: undefined 
             }
+            */
             console.log("receive " + msg.length + "bytes" + 
                         ", to   "  + peer_addr + ":" + peer_port + 
-                        ", ID "    + peer_id +
-                        ", Ans "   + dnspack.parse(msg).answer);
-            */
+                        ", ID "    + peer_id);
+            var dumping = dump(dnspack.parse(msg).answer);
+            console.log("var Answer = " + dumping.split(" ").join("").split("\n").join("") + ";");
         }
 
         if (net.isIPv4(peer_addr)) {
@@ -343,5 +344,5 @@ function tcp_handler(forward4, forward6, odd_data, byte_stream) {
 }
 
 function dump(v){
-    return console.log(util.inspect(v));
+    return util.inspect(v);
 }

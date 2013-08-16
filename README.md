@@ -1,11 +1,11 @@
-dnsmux
+dnsmux.js
 ======
 
  * The dnsmux.js is DNS Proxy which use 1 tcp session multiplexing dns querys.
 
 ```
-# git clone https://github.com/bave/dnsmux.git
-# cd dnsmux
+# git clone https://github.com/bave/dnsmux.js.git
+# cd dnsmux.js
 # npm install
 # node ./dnsmux.js 
 ```
